@@ -172,8 +172,8 @@ void setup() {
 // other functions
 /* intakes commanded velocity from balance controller
  * converts commanded velocity into commanded position */
-float eulerIntegrate(float desiredVelocity, float current_pos){
-  float desiredPosition = current_pos + desiredVelocity * ((float)interval/1000000.0) ;
+float eulerIntegrate(float desiredVelocity, float current_pos_W){
+  float desiredPosition = current_pos_W + desiredVelocity * ((float)interval/1000000.0) ;
   //lefloat desiredPosition = 0;
   return desiredPosition;
 }
@@ -205,8 +205,8 @@ float updateEncoderPositionHandle(){
 void frontWheelControl(float desiredVelocity, float current_pos_W){  //steer contribution doese not need to be passed into 
                                                                    //frontWheelControl because it is a global variable 
   unsigned long current_t = micros();
-  //float desired_pos_W = eulerIntegrate(desiredVelocity, current_pos_W);
-  float desired_pos_W = current_pos_H;
+  float desired_pos_W = eulerIntegrate(desiredVelocity, current_pos_W);
+  //float desired_pos_W = current_pos_H;
   PID_Controller((desired_pos_W + 0.10), relativePosWheel, x_offset_W, current_t, previous_t, oldPosition_W, max_front_PWM, min_front_PWM); //inside PID.cpp, writes PWM to motor pin, added 0.11 to desired_pos to account for encoder offset
   previous_t = current_t;
   oldPosition_W = relativePosWheel - x_offset_W;
@@ -260,28 +260,27 @@ void loop() {
   
       
       float encoder_position_H = updateEncoderPositionHandle(); //output is current position wrt front zero
-      Serial.print("encoder position handlebar: "); Serial.println(encoder_position_H);
+      desired_steer = encoder_position_H;
+      //Serial.print("encoder position handlebar: "); Serial.println(encoder_position_H);
       float encoder_position_W = updateEncoderPositionWheel(); //output is current position wrt front zero
-      Serial.print("encoder position wheel: "); Serial.println(encoder_position_W);
+      //Serial.print("encoder position wheel: "); Serial.println(encoder_position_W);
       
       
-      //roll_t imu_data = updateIMUData(); //get roll angle and roll rate from IMU, stored in a struct: imu_data.roll_angle, imu_data.roll_rate
-      //imu_data.angle = imu_data.angle - 1.57; imu_data.rate = imu_data.rate; //correct for IMU rotation of SBW bike (90 degrees)
+      roll_t imu_data = updateIMUData(); //get roll angle and roll rate from IMU, stored in a struct: imu_data.roll_angle, imu_data.roll_rate
+      imu_data.angle = imu_data.angle - 1.57; imu_data.rate = imu_data.rate; //correct for IMU rotation of SBW bike (90 degrees)
 ///      To make IMU data 0:
-      roll_t imu_data; imu_data.angle = 0; imu_data.rate = 0;
-     // Serial.print("Roll Angle"); Serial.println(imu_data.angle);
+     // roll_t imu_data; imu_data.angle = 0; imu_data.rate = 0;
+      //Serial.print("Roll Angle"); Serial.println(imu_data.angle);
       //analogWrite(PWM_front, 20);
 
       //Call the balance controller, which will return the desired velocity of the front motor - this is the velocity to turn the front wheel to 'recover' from the current roll angle/rate
           //the desired velocity will be integrated to find an angle, which is then passed into the PID_Controller function
           
       float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position_W); //*****PUT IN OFFSET VALUE BECAUSE THE IMU IS READING AN ANGLE OFF BY +.16 RADIANS
-
-      //float desiredVelocity = 0;
       
       //Integrates the desired velocity to find angle to turn, writes pwm to front motor pin using a PD controller
       
-      frontWheelControl((-1)*desiredVelocity, encoder_position_W);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
+      frontWheelControl(desiredVelocity, encoder_position_W);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
 /*
       //Making sure loop length is not violated
       l_diff = micros() - l_start;
