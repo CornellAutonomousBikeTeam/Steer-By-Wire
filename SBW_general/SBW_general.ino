@@ -15,9 +15,9 @@ float tNew = 0;
 int steer_dir = 0; //steer direction
 
 //Balance control constants
-const int k1 = 71; //lean    71
-const int k2 = 10; // lean rate   10 
-const int k3 = -20; // steer
+const int k1 = 0; //71; //lean    71
+const int k2 = 0; //10; // lean rate   10 
+const int k3 = -40; // steer
 
 //define maximum front wheel pwm
 float min_front_PWM = 8;
@@ -207,7 +207,7 @@ void frontWheelControl(float desiredVelocity, float current_pos_W){  //steer con
   unsigned long current_t = micros();
   float desired_pos_W = eulerIntegrate(desiredVelocity, current_pos_W);
   //float desired_pos_W = current_pos_H;
-  PID_Controller((desired_pos_W + 0.10), relativePosWheel, x_offset_W, current_t, previous_t, oldPosition_W, max_front_PWM, min_front_PWM); //inside PID.cpp, writes PWM to motor pin, added 0.11 to desired_pos to account for encoder offset
+  PID_Controller((desired_pos_W), relativePosWheel, x_offset_W, current_t, previous_t, oldPosition_W, max_front_PWM, min_front_PWM); //inside PID.cpp, writes PWM to motor pin, added 0.11 to desired_pos to account for encoder offset
   previous_t = current_t;
   oldPosition_W = relativePosWheel - x_offset_W;
 }
