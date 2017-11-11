@@ -2,6 +2,9 @@
 #include "PID.h"
 #include <math.h>
 
+bool IS_BALANCE_CONTROLLER_ON = true;
+bool IS_STEERING_ON   = true;
+
 //Timed Loop Variables
 const long interval = 10000;
 long l_start;
@@ -72,17 +75,7 @@ signed int x_offset_H = 0;
 float current_pos_H = 0;
 
 
-//count the number of times the time step has been calculated to calculate a running average time step
-//int numTimeSteps = 0;
-//float averageTimeStep = 0;
-//int n = 0;
-
 float desired_steer = 0;
-//float desired_pos_array[250];
-//float theo_position = 0;
-//
-//#define relay3 50
-//#define relay4 49
 
 void setup() {
   // put your setup code here, to run once:
@@ -90,7 +83,6 @@ void setup() {
   initIMU();
 
   // ---- setup up DUE's clock and quadrature decoder ---- //
-  
   // activate peripheral functions for quad pins
   
   REG_PIOB_PDR = mask_quad_A_W;     // activate peripheral function (disables all PIO functionality)
@@ -107,24 +99,24 @@ void setup() {
   REG_PIOC_PDR = mask_idx_H;     // activate peripheral function (disables all PIO functionality)
   REG_PIOC_ABSR |= mask_idx_H;   // choose peripheral option C 
 
+  // activate clock for TC0 and TC1 and TC2
+  REG_PMC_PCER0 = PMC_PCER0_PID27 | PMC_PCER0_PID28 | PMC_PCER0_PID29 | PMC_PCER0_PID30 | PMC_PCER0_PID31; 
+  REG_PMC_PCER1 = PMC_PCER1_PID32 | PMC_PCER1_PID33 | PMC_PCER1_PID34 | PMC_PCER1_PID35; 
 
-// activate clock for TC0 and TC1 and TC2
-  REG_PMC_PCER0 = PMC_PCER0_PID27 | PMC_PCER0_PID28 | PMC_PCER0_PID29 | PMC_PCER0_PID30 | PMC_PCER0_PID31; REG_PMC_PCER1 = PMC_PCER1_PID32 | PMC_PCER1_PID33 | PMC_PCER1_PID34 | PMC_PCER1_PID35; 
-
-      // select XC0 as clock source and set capture mode
+  // select XC0 as clock source and set capture mode
   REG_TC0_CMR0 = 5;
   REG_TC2_CMR0 = 5; 
   
-    // activate quadrature encoder and position measure mode, no filters
+  // activate quadrature encoder and position measure mode, no filters
   REG_TC0_BMR = (1<<9)|(1<<8)|(1<<12);
   REG_TC2_BMR = (1<<9)|(1<<8)|(1<<12);
   
-    // activate the interrupt enable register for index counts (stored in REG_TC0_CV1)
+  // activate the interrupt enable register for index counts (stored in REG_TC0_CV1)
   REG_TC0_QIER = 1;
   REG_TC2_QIER = 1;
   
-    // enable the clock (CLKEN=1) and reset the counter (SWTRG=1) 
-    // SWTRG = 1 necessary to start the clock!!
+  // enable the clock (CLKEN=1) and reset the counter (SWTRG=1) 
+  // SWTRG = 1 necessary to start the clock!!
   REG_TC0_CCR0 = 5;
   REG_TC0_CCR1 = 5;
   REG_TC2_CCR0 = 5; 
@@ -132,13 +124,10 @@ void setup() {
   //setup Motor Outputs
   pinMode(DIR, OUTPUT);
   pinMode (PWM_front, OUTPUT);
-//  pinMode (RunStop, OUTPUT);
   analogWrite(PWM_front, 0);
-//  digitalWrite(RunStop, LOW);
   digitalWrite(DIR, HIGH);
 
 //Calibration (TICKING)
-
   signed int y = REG_TC0_CV1; 
   oldIndex_W = y;
   digitalWrite(DIR, HIGH); 
@@ -151,23 +140,11 @@ void setup() {
   //set x offset to define where the front tick is with respect to the absolute position of the encoder A and B channels
    x_offset_W = REG_TC0_CV0;
 
-  /*
-  signed int y2 = REG_TC2_CV1; 
-  oldIndex_H = y2;
-  digitalWrite(DIR, HIGH); 
-  while(y2==oldIndex_H){
-    //analogWrite(PWM_front, 100);
-    y2 = REG_TC2_CV1;
-    Serial.println(y2);
-    //Serial.println("Ticking 2");
-  }
-
   //set x offset to define where the front tick is with respect to the absolute position of the encoder A and B channels
   x_offset_H = REG_TC2_CV0;
-*/
 
   Serial.println("Setup done");
-}//setup end
+}
 
 // other functions
 /* intakes commanded velocity from balance controller
@@ -247,23 +224,13 @@ struct roll_t{
 //MAIN LOOP
 void loop() {
   // put your main code here, to run repeatedly:
-     // l_start = micros();
-
-   //  analogWrite(PWM_front, 8);
-
-
-  //float raw_speed = .01; //value between 0 and 1 //% of max seed
-  //int mapped_PWM = map(raw_speed, 0, 1, min_front_PWM, max_front_PWM);
-  //maps raw_speed between 0 and 1 to be between 85 and 200
-  //85 PWM means motor does not move. 200 PWM gives 4V to motor which is max spped
-  //analogWrite(PWM_front, mapped_PWM); //
-  
+      l_start = micros()
       
-      float encoder_position_H = updateEncoderPositionHandle(); //output is current position wrt front zero
-      desired_steer = encoder_position_H;
-      //Serial.print("encoder position handlebar: "); Serial.println(encoder_position_H);
-      float encoder_position_W = updateEncoderPositionWheel(); //output is current position wrt front zero
-      //Serial.print("encoder position wheel: "); Serial.println(encoder_position_W);
+      float encoder_position_handlebar = updateEncoderPositionHandle(); //output is current position wrt front zero
+      desired_steer = encoder_position_handlebar;
+      //Serial.print("encoder position handlebar: "); Serial.println(encoder_position_handlebar);
+      float encoder_position_wheel = updateEncoderPositionWheel(); //output is current position wrt front zero
+      //Serial.print("encoder position wheel: "); Serial.println(encoder_position_wheel);
       
       
       roll_t imu_data = updateIMUData(); //get roll angle and roll rate from IMU, stored in a struct: imu_data.roll_angle, imu_data.roll_rate
@@ -276,21 +243,13 @@ void loop() {
       //Call the balance controller, which will return the desired velocity of the front motor - this is the velocity to turn the front wheel to 'recover' from the current roll angle/rate
           //the desired velocity will be integrated to find an angle, which is then passed into the PID_Controller function
           
-      float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position_W); //*****PUT IN OFFSET VALUE BECAUSE THE IMU IS READING AN ANGLE OFF BY +.16 RADIANS
+      float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position_wheel); //*****PUT IN OFFSET VALUE BECAUSE THE IMU IS READING AN ANGLE OFF BY +.16 RADIANS
       
       //Integrates the desired velocity to find angle to turn, writes pwm to front motor pin using a PD controller
       
-      frontWheelControl(desiredVelocity, encoder_position_W);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
-/*
-      //Making sure loop length is not violated
+      frontWheelControl(desiredVelocity, encoder_position_wheel);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
       l_diff = micros() - l_start;
-     // Serial.println(String(l_diff));
-    //Standardize the loop time by checking if it is currently less than the constant interval, if it is, add the differnce so the total loop time is standard
-     if (l_diff < interval){
-        delayMicroseconds(interval - l_diff);
-      }else{
-        Serial.println("LOOP LENGTH WAS VIOLATED. LOOP TIME WAS: " + String(l_diff));
-      }*/
+
       
 }
 
