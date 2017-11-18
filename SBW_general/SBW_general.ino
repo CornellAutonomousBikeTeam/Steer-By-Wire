@@ -274,7 +274,7 @@ void loop() {
       
       float encoder_position_H = updateEncoderPositionHandle(); //output is current position wrt front zero
       if (DOES_HANDLEBAR_INPUT_TO_BALANCE_CONTROLLER){
-        desired_steer=(-1)*encoder_position_H; //-1 is offset to countersteer
+        desired_steer=encoder_position_H; //Should we put a -1 in here for countersteering?
       } else{ 
       desired_steer =0;
       }
