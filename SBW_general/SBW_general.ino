@@ -18,9 +18,9 @@ float tNew = 0;
 int steer_dir = 0; //steer direction
 
 //Balance control constants
-const int k1 = 71; //71; //lean    71
-const int k2 = 10; //10; // lean rate   10 
-const int k3 = -20; // steer
+const int k1 = 95; //71; //lean    71
+const int k2 = 35; //10; // lean rate   10 
+const int k3 = -40; // steer
 
 //define maximum front wheel pwm
 float min_front_PWM = 8;
@@ -92,6 +92,8 @@ void setup() {
   Serial.begin(115200);//PC baud rate
   initIMU();
 
+
+  
   // ---- setup up DUE's clock and quadrature decoder ---- //
   
   // activate peripheral functions for quad pins
@@ -206,14 +208,15 @@ float updateEncoderPositionHandle(){
 
 /* takes in desired position and applies a PID controller to minimize error between current position and desired position */
 void frontWheelControl(float desiredVelocity, float current_pos_W){  //steer contribution doese not need to be passed into 
-  Serial.println("Entered Fucntion");                                                //frontWheelControl because it is a global variable 
+  //Serial.println("Entered Fucntion");                                                //frontWheelControl because it is a global variable 
   unsigned long current_t = micros();
   if (IS_BALANCE_CONTROLLER_ON){
     desired_pos_W = eulerIntegrate(desiredVelocity, current_pos_W);
   } else {
     desired_pos_W = current_pos_H;
   }
-     Serial.println(desired_pos_W);
+     //Serial.println(desired_pos_W);
+     
 
 
   PID_Controller((desired_pos_W), relativePosWheel, x_offset_W, current_t, previous_t, oldPosition_W, max_front_PWM, min_front_PWM); 
@@ -291,7 +294,7 @@ void loop() {
       float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position_W); 
       
       //Integrates the desired velocity to find angle to turn, writes pwm to front motor pin using a PD controller
-      
+      Serial.println(encoder_position_W);
       frontWheelControl(desiredVelocity, encoder_position_W);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
 /*
       //Making sure loop length is not violated

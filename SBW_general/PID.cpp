@@ -23,7 +23,7 @@ void PID_Controller(float desired_pos, signed int x, signed int x_offset_W,
   
   // the value of the velocity error will be negative of the current velocity (in order to resist current direction of motion). Calculated as target_velocity - current_velocity where target velocity is always 0
   //scaled velocity error
-  float sv_error =  (-K_d*current_vel)  ;  
+  float sv_error =  (K_d*current_vel)  ;  
   float total_error =  sp_error + sv_error ;
 
 //Serial.print("total error: "); Serial.println(total_error);

@@ -9,7 +9,7 @@
 #define PWM_front 8
 #define DIR 46
 #define K_p 500 // 200 - 400
-#define K_d -0.1 // -1.5 ish
+#define K_d -15 // -1.5 ish
 #define K_i 0
 
 /*Define functions*/
