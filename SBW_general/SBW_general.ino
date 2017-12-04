@@ -95,7 +95,7 @@ void setup() {
    Serial.println("Start"); //Trigger Word for Raspberry Pi to know a test is starting
    Serial.println("K1="+String(k1)+" K2="+String(k2)+" K3="+String(k3)); //print to csv in pi
    Serial.println(String("millis")+", "+"encoder_position_H"+", "+"encoder_position_W"+
-                ", "+ "imudata.angle"+ ", " + "imudata.rate"); //print to csv in pi
+                ", "+ "imudata.angle"+ ", " + "imudata.rate" + ", " + "desired_pos_W"); //print to csv in pi
   
   // ---- setup up DUE's clock and quadrature decoder ---- //
   
@@ -310,7 +310,7 @@ void loop() {
         Serial.println("LOOP LENGTH WAS VIOLATED. LOOP TIME WAS: " + String(l_diff));
       }*/
               Serial.println(String(millis())+", "+ String(encoder_position_H)+", "+String(encoder_position_W)+
-                ", "+ String(imu_data.angle)+ ", " + String(imu_data.rate)); //send data to pi to be printed to csv
+                ", "+ String(imu_data.angle)+ ", " + String(imu_data.rate) + ", " + String(desired_pos_W)); //send data to pi to be printed to csv
 }
 
 
