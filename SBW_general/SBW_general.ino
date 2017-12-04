@@ -2,8 +2,9 @@
 #include "PID.h"
 #include <math.h>
 
-bool IS_BALANCE_CONTROLLER_ON = true;
+bool IS_BALANCE_CONTROLLER_ON = false;
 bool DOES_HANDLEBAR_INPUT_TO_BALANCE_CONTROLLER = true;
+
 
 //Timed Loop Variables
 const long interval = 10000;
@@ -91,8 +92,10 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);//PC baud rate
   initIMU();
-
-
+   Serial.println("Start"); //Trigger Word for Raspberry Pi to know a test is starting
+   Serial.println("K1="+String(k1)+" K2="+String(k2)+" K3="+String(k3)); //print to csv in pi
+   Serial.println(String("millis")+", "+"encoder_position_H"+", "+"encoder_position_W"+
+                ", "+ "imudata.angle"+ ", " + "imudata.rate"); //print to csv in pi
   
   // ---- setup up DUE's clock and quadrature decoder ---- //
   
@@ -150,7 +153,7 @@ void setup() {
   while(y==oldIndex_W){
     //analogWrite(PWM_front, 100);
     y = REG_TC0_CV1;
-    Serial.println("Ticking 1");
+    //Serial.println("Ticking 1");
   }
   
   //set x offset to define where the front tick is with respect to the absolute position of the encoder A and B channels
@@ -255,7 +258,7 @@ struct roll_t{
       Serial.println(speed, 3);
     }
 }*/
-
+             
 
 //MAIN LOOP
 void loop() {
@@ -274,7 +277,7 @@ void loop() {
       
       float encoder_position_H = updateEncoderPositionHandle(); //output is current position wrt front zero
       if (DOES_HANDLEBAR_INPUT_TO_BALANCE_CONTROLLER){
-        desired_steer=encoder_position_H; //Should we put a -1 in here for countersteering?
+        desired_steer= encoder_position_H; //Should we put a -1 in here for countersteering?
       } else{ 
       desired_steer =0;
       }
@@ -294,7 +297,7 @@ void loop() {
       float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position_W); 
       
       //Integrates the desired velocity to find angle to turn, writes pwm to front motor pin using a PD controller
-      Serial.println(encoder_position_W);
+      //Serial.println(encoder_position_W);
       frontWheelControl(desiredVelocity, encoder_position_W);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
 /*
       //Making sure loop length is not violated
@@ -306,7 +309,8 @@ void loop() {
       }else{
         Serial.println("LOOP LENGTH WAS VIOLATED. LOOP TIME WAS: " + String(l_diff));
       }*/
-      
+              Serial.println(String(millis())+", "+ String(encoder_position_H)+", "+String(encoder_position_W)+
+                ", "+ String(imu_data.angle)+ ", " + String(imu_data.rate)); //send data to pi to be printed to csv
 }
 
 
