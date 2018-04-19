@@ -25,6 +25,7 @@ float max_front_PWM = 200;    //
 
 //Read the relative position of the encoder
 signed int relativePos = REG_TC0_CV0;
+
 //Read the index value (Z channel) of the encoder
 signed int indexValue = REG_TC0_CV1;
 
@@ -230,4 +231,4 @@ void loop() {
       
 }
 
-
+  

@@ -23,7 +23,7 @@ const int k3 = -20; // steer was -20
 float maxfront_PWM = 80;    // motor cuts out around pwm = 136
 
 //Read the relative position of the encoder
-signed int relativePos = REG_TC0_CV0;
+signed int relativePos = REG_TC0_CV0; // port ?
 //Read the index value (Z channel) of the encoder
 signed int indexValue = REG_TC0_CV1;
 
@@ -165,6 +165,7 @@ void loop() {
       float encoder_position = updateEncoderPosition(); //output is current position wrt front zero
       
       roll_t imu_data = updateIMUData(); //get roll angle and roll rate from IMU, stored in a struct: imu_data.roll_angle, imu_data.roll_rate
+
       imu_data.angle = imu_data.angle - 1.57; imu_data.rate = imu_data.rate; //correct for IMU rotation of SBW bike (90 degrees)
 
       //Call the balance controller, which will return the desired velocity of the front motor - this is the velocity to turn the front wheel to 'recover' from the current roll angle/rate
@@ -172,7 +173,7 @@ void loop() {
       float desiredVelocity = balanceController(((1)*(imu_data.angle)),(1)*imu_data.rate, encoder_position);
       
       //Integrates the desired velocity to find angle to turn, writes pwm to front motor pin using a PD controller
-      frontWheelControl((-1)*desiredVelocity, encoder_position);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
+      frontWheelControlff((-1)*desiredVelocity, encoder_position);  //DESIRED VELOCITY SET TO NEGATIVE TO MATCH SIGN CONVENTION BETWEEN BALANCE CONTROLLER AND 
 
       //Making sure loop length is not violated
       l_diff = micros() - l_start;

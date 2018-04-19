@@ -283,7 +283,7 @@ void loop() {
       }
       //Serial.print("encoder position handlebar: "); Serial.println(encoder_position_H);
       float encoder_position_W = updateEncoderPositionWheel(); //output is current position wrt front zero
-      //Serial.print("encoder position wheel: "); Serial.println(encoder_position_W);
+     // Serial.print("encoder position wheel: "); Serial.println(encoder_position_W);
       
       
       roll_t imu_data = updateIMUData(); //get roll angle and roll rate from IMU, stored in a struct: imu_data.roll_angle, imu_data.roll_rate
@@ -309,8 +309,8 @@ void loop() {
       }else{
         Serial.println("LOOP LENGTH WAS VIOLATED. LOOP TIME WAS: " + String(l_diff));
       }*/
-              Serial.println(String(millis())+", "+ String(encoder_position_H)+", "+String(encoder_position_W)+
-                ", "+ String(imu_data.angle)+ ", " + String(imu_data.rate) + ", " + String(desired_pos_W)); //send data to pi to be printed to csv
+            //  Serial.println(String(millis())+", "+ String(encoder_position_H)+", "+String(encoder_position_W)+
+          //      ", "+ String(imu_data.angle)+ ", " + String(imu_data.rate) + ", " + String(desired_pos_W)); //send data to pi to be printed to csv
 }
 
 

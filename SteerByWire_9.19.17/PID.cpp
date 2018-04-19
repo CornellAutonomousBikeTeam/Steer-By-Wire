@@ -18,7 +18,9 @@ void PID_Controller(float desired_pos, signed int x, signed int x_offset,
 
   //D term
   //calculate velocity error
-//  unsigned long current_t = micros();
+ //  unsigned long current_t = micros();
+  Serial.print("Current Angle Used in Angular Speed: ");
+  Serial.print(((x-x_offset)-oldPosition)*0.02197*1000000 );
   float current_vel = (((((x-x_offset)-oldPosition)*0.02197*1000000*M_PI/180.0)/(current_t-previous_t)));   //Angular Speed(rad/s)
   
   // the value of the velocity error will be negative of the current velocity (in order to resist current direction of motion). Calculated as target_velocity - current_velocity where target velocity is always 0
