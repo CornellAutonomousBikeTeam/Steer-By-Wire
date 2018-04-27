@@ -7,9 +7,9 @@
 /*Define definite variables*/
 //PID
 #define PWM_front 8
-#define DIR 11
-#define K_p 5000 //200
-#define K_d -50 // -1.5 ish
+#define DIR 46
+#define K_p 500 // 200 - 400
+#define K_d -15 // -1.5 ish
 #define K_i 0
 
 /*Define functions*/

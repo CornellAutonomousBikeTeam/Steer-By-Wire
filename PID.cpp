@@ -1,11 +1,11 @@
 #include "PID.h"
 #include <math.h>
 
-void PID_Controller(float desired_pos, signed int x, signed int x_offset, 
-  unsigned long current_t, unsigned long previous_t, signed int oldPosition, float maxPWM, float minPWM) {
+void PID_Controller(float desired_pos, signed int x, signed int x_offset_W, 
+  unsigned long current_t, unsigned long previous_t, signed int oldPosition_W, float maxPWM, float minPWM) {
   //when y value changes (when wheel passes index tick) print absolute position of the wheel now to see if encoder absolute position
   //is drifting
-  float current_pos = (((x - x_offset) * 0.02197 * M_PI)/180); //Angle (rad)
+  float current_pos = (((x - x_offset_W) * 0.02197 * M_PI)/180); //Angle (rad)
  
   //write PID controller based off of error signal received from encoder
   //P term
@@ -19,35 +19,35 @@ void PID_Controller(float desired_pos, signed int x, signed int x_offset,
   //D term
   //calculate velocity error
 //  unsigned long current_t = micros();
-  float current_vel = (((((x-x_offset)-oldPosition)*0.02197*1000000*M_PI/180.0)/(current_t-previous_t)));   //Angular Speed(rad/s)
+  float current_vel = (((((x-x_offset_W)-oldPosition_W)*0.02197*1000000*M_PI/180.0)/(current_t-previous_t)));   //Angular Speed(rad/s)    <---- does this need to be updated?
   
   // the value of the velocity error will be negative of the current velocity (in order to resist current direction of motion). Calculated as target_velocity - current_velocity where target velocity is always 0
   //scaled velocity error
-  float sv_error =  (-K_d*current_vel)  ;  
+  float sv_error =  (K_d*current_vel)  ;  
   float total_error =  sp_error + sv_error ;
 
-Serial.print("total error: "); Serial.println(total_error);
+//Serial.print("total error: "); Serial.println(total_error);
 
   if (total_error <= 0) {
     analogWrite(DIR, 255); 
 
     total_error = constrain(total_error,-255,0);
-    total_error = map(total_error, 0, -255, 75, 200); 
+    total_error = map(total_error, 0, -255, 2, 200); 
     analogWrite(PWM_front, (int)(total_error));
-    Serial.println(total_error);
+    //Serial.println(total_error);
     
   } else {
     analogWrite(DIR, 0);
     total_error = constrain(total_error,0,255);
-    total_error = map(total_error, 0, 255, 75, 200); 
+    total_error = map(total_error, 0, 255, 2, 200); 
     analogWrite(PWM_front, (int)(total_error));
-    Serial.println(total_error);
+    //Serial.println(total_error);
   }
 
  
 
   //clip the maximum output to the motor by essentially saying "if the value is greater than this threshold, make the output to the motor this exact threshold value"
-  oldPosition = x-x_offset;
+  oldPosition_W = x-x_offset_W;
   /*
    if (total_error > maxPWM +10 || total_error < -maxPWM - 10) {
       analogWrite(PWM_front, maxPWM);
